@@ -66,6 +66,7 @@ src/
     tagging/          # offline rules + Gemini provider + taxonomy
     trash/            # soft delete, restore, export
   adapters/           # thin chrome.* wrappers (the only place chrome.* appears)
+  services/           # composition: adapters + core, no logic of its own
   ui/                 # React components and hooks
   shared/             # types, typed message bus, constants
 ```
