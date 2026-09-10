@@ -8,6 +8,7 @@
 | [Link checking](link-check.md) | You are changing anything under `core/linkcheck/**` — read first |
 | [Tagging](tagging.md) | You are working on rules, the taxonomy, or the Gemini integration |
 | [Roadmap](roadmap.md) | You are picking up the next piece of work |
+| [Phase 0–1 plan](superpowers/plans/2026-09-10-phase-0-1-foundation-and-audit.md) | You are implementing the foundation and audit |
 
 ## Decision records
 
