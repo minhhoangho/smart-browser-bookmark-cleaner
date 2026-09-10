@@ -23,6 +23,8 @@ export function scheduleSync(delayMs = 2000): void {
   if (pending !== undefined) clearTimeout(pending);
   pending = setTimeout(() => {
     pending = undefined;
-    void syncBookmarkIndex();
+    void syncBookmarkIndex().catch((error: unknown) => {
+      console.error('[sbc] scheduled bookmark sync failed', error);
+    });
   }, delayMs);
 }

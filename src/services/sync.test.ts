@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { deleteDB } from 'idb';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BookmarkNode } from '@/shared/types';
 
 const tree: BookmarkNode[] = [
@@ -21,7 +21,7 @@ const tree: BookmarkNode[] = [
 const getBookmarkTree = vi.fn<() => Promise<BookmarkNode[]>>();
 vi.mock('@/adapters/bookmarks', () => ({ getBookmarkTree: () => getBookmarkTree() }));
 
-const { syncBookmarkIndex } = await import('./sync');
+const { syncBookmarkIndex, scheduleSync } = await import('./sync');
 const { getAllBookmarks, resetDbConnection, DB_NAME } = await import('@/adapters/db');
 
 describe('syncBookmarkIndex', () => {
@@ -57,5 +57,46 @@ describe('syncBookmarkIndex', () => {
 
     expect(plan.removed).toEqual(['10']);
     expect(await getAllBookmarks()).toEqual([]);
+  });
+});
+
+describe('scheduleSync', () => {
+  beforeEach(async () => {
+    resetDbConnection();
+    await deleteDB(DB_NAME);
+    getBookmarkTree.mockReset();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('reports a failed sync instead of swallowing it', async () => {
+    const failure = new Error('boom');
+    getBookmarkTree.mockRejectedValue(failure);
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const unhandledRejections: unknown[] = [];
+    const onUnhandledRejection = (reason: unknown): void => {
+      unhandledRejections.push(reason);
+    };
+    process.on('unhandledRejection', onUnhandledRejection);
+
+    try {
+      scheduleSync();
+      await vi.advanceTimersByTimeAsync(2000);
+      // Give a stray unhandled rejection a chance to surface before asserting
+      // there isn't one — Node schedules the event a tick after the promise
+      // settles unhandled.
+      await Promise.resolve();
+      await Promise.resolve();
+    } finally {
+      process.off('unhandledRejection', onUnhandledRejection);
+    }
+
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError.mock.calls[0]?.[1]).toBe(failure);
+    expect(unhandledRejections).toEqual([]);
   });
 });

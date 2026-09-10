@@ -25,9 +25,12 @@ export function getDb(): Promise<IDBPDatabase<SbcSchema>> {
   return connection;
 }
 
-/** Test hook: drops the cached connection so a fresh database can be opened. */
+/**
+ * Test hook: closes the live connection, if any, then drops the cached
+ * connection promise so a fresh database can be opened.
+ */
 export function resetDbConnection(): void {
-  void connection?.then((db) => db.close());
+  void connection?.then((db) => db.close()).catch(() => {});
   connection = undefined;
 }
 
