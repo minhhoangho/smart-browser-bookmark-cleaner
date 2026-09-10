@@ -38,4 +38,37 @@ describe('isScannable', () => {
   it('rejects unparseable input', () => {
     expect(isScannable('not a url')).toBe(false);
   });
+
+  it('rejects IPv6 private, link-local, unspecified, and mapped hosts', () => {
+    for (const url of [
+      'http://[fd00::1]/', // unique-local, fc00::/7
+      'http://[fe80::1]/', // link-local, fe80::/10
+      'http://[::ffff:127.0.0.1]/', // IPv4-mapped loopback
+      'http://[::]/', // unspecified address
+    ]) {
+      expect(isScannable(url), url).toBe(false);
+    }
+  });
+
+  it('rejects widened IPv4 private ranges', () => {
+    for (const url of [
+      'http://0.0.0.0/x', // 0.0.0.0/8
+      'http://0.1.2.3/x', // 0.0.0.0/8
+      'http://100.64.0.1/x', // CGNAT, 100.64.0.0/10
+      'http://100.127.255.255/x', // CGNAT, 100.64.0.0/10
+    ]) {
+      expect(isScannable(url), url).toBe(false);
+    }
+  });
+
+  it('does not reject ordinary domains that merely start with IPv6-ish hex prefixes', () => {
+    expect(isScannable('http://fcbook.example/')).toBe(true);
+    expect(isScannable('http://fe80.example.com/')).toBe(true);
+  });
+
+  it('accepts ordinary public IPv6 hosts and boundary-adjacent IPv4 hosts', () => {
+    expect(isScannable('http://[2001:db8::1]/')).toBe(true);
+    expect(isScannable('http://100.63.0.1/x')).toBe(true); // just below CGNAT range
+    expect(isScannable('http://100.128.0.1/x')).toBe(true); // just above CGNAT range
+  });
 });

@@ -42,7 +42,9 @@ looks like an attack and gets the user's IP blocked.
 Never sent to the network, reported separately in the UI:
 
 `javascript:` · `file:` · `chrome:` · `chrome-extension:` · `data:` · `about:` ·
-`localhost` / `127.0.0.0/8` / `::1` · RFC 1918 private ranges · `.local` hosts
+`localhost` / `0.0.0.0/8` / `127.0.0.0/8` / `100.64.0.0/10` (CGNAT) ·
+`::` / `::1` / `fc00::/7` (unique-local) / `fe80::/10` (link-local) /
+`::ffff:0:0/96` (IPv4-mapped) · RFC 1918 private ranges · `.local` hosts
 
 Scanning a user's intranet from an extension is both useless and invasive.
 
