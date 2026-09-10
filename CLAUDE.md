@@ -72,6 +72,9 @@ src/
 
 ## Workflow
 
+The main branch of this repository is **`master`** (not `main`). Branch from
+it and open pull requests against it.
+
 **Commit each part as soon as it is done.** Do not batch unrelated changes into
 one commit. A "part" = one module, one feature slice, or one docs update that
 stands on its own and passes `pnpm typecheck && pnpm test`.
