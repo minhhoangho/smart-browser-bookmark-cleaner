@@ -18,3 +18,4 @@ coverage/
 
 # agent scratch
 .superpowers/
+.vitest/
