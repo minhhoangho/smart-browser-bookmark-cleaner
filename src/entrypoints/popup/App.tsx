@@ -1,4 +1,4 @@
-import { browser } from 'wxt/browser';
+import { browser } from '#imports';
 
 export default function App() {
   const open = () => {
