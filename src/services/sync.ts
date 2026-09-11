@@ -16,8 +16,13 @@ let pending: ReturnType<typeof setTimeout> | undefined;
 
 /**
  * Coalesces the burst of events the browser emits during a drag or an import
- * into a single sync. Losing the timer to a terminated service worker is
- * harmless: the next startup or dashboard open syncs anyway.
+ * into a single sync. If the service worker is terminated before the timer
+ * fires, the pending sync is lost — it is not persisted or resumed. The index
+ * then stays stale until the next bookmark change reschedules a sync, or the
+ * browser restarts (`runtime.onStartup`) or the extension is installed/updated
+ * (`runtime.onInstalled`), both of which sync unconditionally. Opening the
+ * dashboard does **not** recover it: the dashboard reads the live bookmark
+ * tree directly and never touches the stored index.
  */
 export function scheduleSync(delayMs = 2000): void {
   if (pending !== undefined) clearTimeout(pending);
