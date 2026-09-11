@@ -17,14 +17,14 @@ export default function DuplicateList({ groups }: { groups: DuplicateGroup[] }) 
           <ul className="mt-2 space-y-1 text-sm">
             <li className="flex items-baseline gap-2">
               <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-800">keep</span>
-              <span className="min-w-0 text-slate-900">{group.keeper.title}</span>
-              <span className="min-w-0 text-slate-400">{formatPath(group.keeper.path)}</span>
+              <span className="truncate text-slate-900">{group.keeper.title}</span>
+              <span className="text-slate-400">{formatPath(group.keeper.path)}</span>
             </li>
             {group.duplicates.map((duplicate) => (
               <li key={duplicate.id} className="flex items-baseline gap-2">
                 <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">copy</span>
-                <span className="min-w-0 text-slate-900">{duplicate.title}</span>
-                <span className="min-w-0 text-slate-400">{formatPath(duplicate.path)}</span>
+                <span className="truncate text-slate-900">{duplicate.title}</span>
+                <span className="text-slate-400">{formatPath(duplicate.path)}</span>
               </li>
             ))}
           </ul>
