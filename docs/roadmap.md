@@ -8,7 +8,7 @@ Commit messages are English, imperative, short — see `CLAUDE.md`.
 
 1. Scaffold WXT + React + TypeScript + Tailwind — `chore: scaffold wxt project`
 2. Vitest setup with `fakeBrowser` — `chore: set up vitest`
-3. Shared types and typed message bus — `feat: add shared types and message bus`
+3. Shared domain types — introduced alongside their first consumer in Task 4
 4. IndexedDB schema and adapter — `feat: add indexeddb adapter`
 
 ## Phase 1 — Instant audit (no permissions)
@@ -40,6 +40,7 @@ scanner so no verdict can ever cause an unrecoverable deletion.
 17. Request strategy: HEAD, GET fallback, ranged body — `feat: add fetch strategy`
 18. Per-host throttled queue — `feat: add throttled request queue`
 19. Resumable scan job state machine — `feat: add resumable scan job`
+19b. Typed message bus between dashboard and background — `feat: add typed message bus`
 20. Background orchestration: port keepalive + alarms — `feat: orchestrate scan in background`
 21. Scan UI: progress, pause, cancel, results — `feat: add scan progress ui`
 22. Two-run confirmation before deletion is offered — `feat: require two runs before suggesting deletion`
