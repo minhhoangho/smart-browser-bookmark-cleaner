@@ -19,9 +19,7 @@ export default defineConfig({
     // from entrypoint discovery so `foo.ts` -> `foo.test.ts` colocation keeps
     // working inside src/entrypoints/.
     'entrypoints:found': (_wxt, infos) => {
-      for (let i = infos.length - 1; i >= 0; i--) {
-        if (/\.test\.[jt]sx?$/.test(infos[i]?.inputPath ?? '')) infos.splice(i, 1);
-      }
+      infos.splice(0, infos.length, ...infos.filter((info) => !/\.test\.[jt]sx?$/.test(info.inputPath)));
     },
   },
 });

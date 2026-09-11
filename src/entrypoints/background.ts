@@ -1,8 +1,16 @@
 import { scheduleSync, syncBookmarkIndex } from '@/services/sync';
 
 export default defineBackground(() => {
-  browser.runtime.onInstalled.addListener(() => void syncBookmarkIndex());
-  browser.runtime.onStartup.addListener(() => void syncBookmarkIndex());
+  browser.runtime.onInstalled.addListener(() => {
+    void syncBookmarkIndex().catch((error: unknown) => {
+      console.error('[sbc] install sync failed', error);
+    });
+  });
+  browser.runtime.onStartup.addListener(() => {
+    void syncBookmarkIndex().catch((error: unknown) => {
+      console.error('[sbc] startup sync failed', error);
+    });
+  });
 
   const changeEvents = [
     browser.bookmarks.onCreated,

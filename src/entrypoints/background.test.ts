@@ -58,6 +58,58 @@ describe('background', () => {
     expect(syncBookmarkIndex).toHaveBeenCalledOnce();
   });
 
+  it('logs (and does not leave unhandled) a sync failure on install', async () => {
+    const failure = new Error('boom');
+    syncBookmarkIndex.mockRejectedValueOnce(failure);
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const unhandledRejections: unknown[] = [];
+    const onUnhandledRejection = (reason: unknown): void => {
+      unhandledRejections.push(reason);
+    };
+    process.on('unhandledRejection', onUnhandledRejection);
+
+    try {
+      await fakeBrowser.runtime.onInstalled.trigger({ reason: 'install' });
+      // Give the .catch() microtask a chance to run before asserting.
+      await Promise.resolve();
+      await Promise.resolve();
+    } finally {
+      process.off('unhandledRejection', onUnhandledRejection);
+    }
+
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError.mock.calls[0]?.[0]).toBe('[sbc] install sync failed');
+    expect(consoleError.mock.calls[0]?.[1]).toBe(failure);
+    expect(unhandledRejections).toEqual([]);
+  });
+
+  it('logs (and does not leave unhandled) a sync failure on startup', async () => {
+    const failure = new Error('boom');
+    syncBookmarkIndex.mockRejectedValueOnce(failure);
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const unhandledRejections: unknown[] = [];
+    const onUnhandledRejection = (reason: unknown): void => {
+      unhandledRejections.push(reason);
+    };
+    process.on('unhandledRejection', onUnhandledRejection);
+
+    try {
+      await fakeBrowser.runtime.onStartup.trigger();
+      // Give the .catch() microtask a chance to run before asserting.
+      await Promise.resolve();
+      await Promise.resolve();
+    } finally {
+      process.off('unhandledRejection', onUnhandledRejection);
+    }
+
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError.mock.calls[0]?.[0]).toBe('[sbc] startup sync failed');
+    expect(consoleError.mock.calls[0]?.[1]).toBe(failure);
+    expect(unhandledRejections).toEqual([]);
+  });
+
   it('schedules a debounced sync when a bookmark is created', () => {
     expect(onCreated.current).toBeDefined();
     onCreated.current?.();

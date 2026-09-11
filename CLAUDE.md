@@ -110,6 +110,10 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
 - Host permissions for link checking are **optional** and requested on demand
   (`chrome.permissions.request`) — the extension must stay fully functional for
   offline features when they are denied.
+- WXT derives an entrypoint's name from the filename segment before its first
+  dot, so a colocated `background.test.ts` collides with `background.ts` and
+  breaks the build. The `entrypoints:found` hook in `wxt.config.ts` filters
+  test files out of the scan so `foo.ts` -> `foo.test.ts` colocation works.
 
 ## Conventions
 
