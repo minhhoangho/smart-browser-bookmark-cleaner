@@ -24,7 +24,7 @@ export default function PathList({ items, emptyMessage }: Props) {
             {item.path.length > 0 ? item.path.join(' / ') : '(top level)'}
           </span>
           {item.detail !== undefined && (
-            <span className="ml-auto truncate font-mono text-xs text-slate-400">{item.detail}</span>
+            <span className="ml-auto max-w-[40%] truncate font-mono text-xs text-slate-400">{item.detail}</span>
           )}
         </li>
       ))}
