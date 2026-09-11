@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AuditReport } from '@/core/bookmarks/audit';
 
@@ -73,5 +73,31 @@ describe('dashboard App', () => {
     expect(summaryCardValue('redundant copies')).toBe('7');
     expect(summaryCardValue('empty folders')).toBe('2');
     expect(summaryCardValue('not checkable')).toBe('1');
+  });
+
+  it('lists empty folders and unscannable entries under their own heading, not swapped', async () => {
+    runAudit.mockResolvedValue({
+      ...emptyReport(),
+      emptyFolders: [
+        { id: 'f1', parentId: '1', path: ['Bookmarks bar'], title: 'Empty-folder-only title', depth: 1, isProtected: false },
+      ],
+      unscannable: [
+        {
+          id: 'b1', parentId: '1', path: [], index: 0, title: 'Unscannable-only title',
+          url: 'file:///notes.txt', normalizedUrl: 'file:///notes.txt', dateAdded: 1, scannable: false,
+        },
+      ],
+    });
+
+    const { container } = render(<App />);
+    await within(container).findByRole('heading', { name: /empty folders/i });
+
+    const emptyFoldersSection = within(container).getByRole('heading', { name: /empty folders/i }).parentElement;
+    const notCheckableSection = within(container).getByRole('heading', { name: /not checkable/i }).parentElement;
+
+    expect(emptyFoldersSection?.textContent).toContain('Empty-folder-only title');
+    expect(emptyFoldersSection?.textContent).not.toContain('Unscannable-only title');
+    expect(notCheckableSection?.textContent).toContain('Unscannable-only title');
+    expect(notCheckableSection?.textContent).not.toContain('Empty-folder-only title');
   });
 });
