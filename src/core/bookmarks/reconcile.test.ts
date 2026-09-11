@@ -51,4 +51,24 @@ describe('reconcile', () => {
     expect(plan.updated.map((r) => r.id)).toEqual(['a']);
     expect(plan.invalidated).toEqual(['a']);
   });
+
+  it('updates a record when its normalizedUrl was re-derived, without invalidating it', () => {
+    // Same page, same url — only what a widened normalizeUrl would produce differs.
+    const plan = reconcile(
+      [rec({ id: 'a', normalizedUrl: 'https://example.com' })],
+      [rec({ id: 'a' })],
+    );
+    expect(plan.updated.map((r) => r.id)).toEqual(['a']);
+    expect(plan.invalidated).toEqual([]);
+  });
+
+  it('updates a record when its scannable flag was re-derived, without invalidating it', () => {
+    // Same page, same url — only what a widened isScannable predicate would produce differs.
+    const plan = reconcile(
+      [rec({ id: 'a', scannable: false })],
+      [rec({ id: 'a' })],
+    );
+    expect(plan.updated.map((r) => r.id)).toEqual(['a']);
+    expect(plan.invalidated).toEqual([]);
+  });
 });

@@ -19,6 +19,17 @@ function isSamePlacement(a: BookmarkRecord, b: BookmarkRecord): boolean {
   );
 }
 
+/**
+ * True when data derived from the (unchanged) url — `normalizedUrl` and
+ * `scannable` — no longer matches what is stored. This catches a widened
+ * `isScannable` predicate or an extended tracking-param list re-deriving a
+ * different value for an already-indexed bookmark, so the fix heals on the
+ * next sync instead of leaving stale derived data behind indefinitely.
+ */
+function derivedDataChanged(a: BookmarkRecord, b: BookmarkRecord): boolean {
+  return a.normalizedUrl !== b.normalizedUrl || a.scannable !== b.scannable;
+}
+
 /** Diffs the live bookmark tree against the stored index. Pure. */
 export function reconcile(
   live: BookmarkRecord[],
@@ -38,7 +49,7 @@ export function reconcile(
     if (previous.url !== record.url) {
       plan.updated.push(record);
       plan.invalidated.push(record.id);
-    } else if (!isSamePlacement(previous, record)) {
+    } else if (!isSamePlacement(previous, record) || derivedDataChanged(previous, record)) {
       plan.updated.push(record);
     }
   }
