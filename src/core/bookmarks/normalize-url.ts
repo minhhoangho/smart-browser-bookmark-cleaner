@@ -25,9 +25,11 @@ export function normalizeUrl(raw: string): string {
 
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return raw.trim();
 
-  if (url.protocol === 'http:' && url.port === '80') url.port = '';
+  // No explicit default-port stripping needed here: the WHATWG URL parser
+  // already drops `:80` on http at parse time, and reassigning `protocol`
+  // below drops `:443` for the new https scheme the same way. Both are
+  // verified by the "drops default ports" cases in normalize-url.test.ts.
   url.protocol = 'https:';
-  if (url.port === '443') url.port = '';
 
   url.username = '';
   url.password = '';
