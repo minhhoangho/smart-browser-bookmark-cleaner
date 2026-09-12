@@ -35,6 +35,8 @@ scanner so no verdict can ever cause an unrecoverable deletion.
 ## Phase 3 — Dead-link scan
 
 14. Optional host permission flow — `feat: request host permission on demand`
+14b. Flag empty-titled entries as suspicious (moved here from the Phase 1
+     spec, where it was never implemented) — `feat: flag empty-titled bookmarks as suspicious`
 15. Verdict classifier (pure) — `feat: classify link check verdicts`
 16. Soft-404 heuristics — `feat: detect soft 404 pages`
 17. Request strategy: HEAD, GET fallback, ranged body — `feat: add fetch strategy`

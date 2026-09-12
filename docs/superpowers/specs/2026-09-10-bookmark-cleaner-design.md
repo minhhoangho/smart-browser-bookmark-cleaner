@@ -119,12 +119,14 @@ On first open the dashboard reads the bookmark tree and reports, offline:
 
 - **Duplicates** — grouped by normalized URL. Normalization strips tracking
   params (`utm_*`, `fbclid`, `gclid`, …), lowercases the host, drops a default
-  port, drops a trailing slash, and drops the fragment except for known
-  hash-routed hosts. It does **not** strip meaningful query params.
+  port, drops a trailing slash, and drops the fragment unless it looks like a
+  client-side route (starts with `#!` or `#/`) — a prefix heuristic, not an
+  allowlist of known hash-routed hosts. It does **not** strip meaningful query
+  params.
 - **Empty folders** — folders with no descendants that hold a bookmark.
 - **Suspicious entries** — `javascript:` bookmarklets, `file://`, `localhost`,
-  private-IP hosts, and entries with an empty title. These are reported but
-  **excluded from network scanning**.
+  and private-IP hosts. These are reported but **excluded from network
+  scanning**.
 
 This is the hook: value before the user grants anything.
 

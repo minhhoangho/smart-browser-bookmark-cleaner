@@ -1,2 +1,10 @@
+# pnpm blocks installing any package published more recently than its
+# `minimumReleaseAge` cooling-off window, as a guard against just-published
+# (and potentially compromised) releases. This one entry is a transitive
+# optional native binding of rolldown, for a platform (OpenHarmony arm64)
+# nobody here builds for, whose publish briefly falls inside that window and
+# would otherwise fail the whole install. Scoped to this exact package@version
+# only — do not widen it to a bare package name or delete it without checking
+# whether the underlying install failure still reproduces.
 minimumReleaseAgeExclude:
   - '@rolldown/binding-openharmony-arm64@1.2.8'
