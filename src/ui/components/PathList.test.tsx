@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import PathList from './PathList';
 import type { PathListItem } from './PathList';
 
@@ -49,5 +49,28 @@ describe('PathList', () => {
 
     rerender(<PathList items={[item({ id: 'a' })]} emptyMessage="Nothing to show." />);
     expect(screen.queryByText('https://example.com/')).toBeNull();
+  });
+
+  it('shows no Show in Chrome control without a handler', () => {
+    render(<PathList items={[item({ id: 'a', folderId: '1' })]} emptyMessage="Nothing to show." />);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('shows no Show in Chrome control for an item without a folder', () => {
+    render(<PathList items={[item({ id: 'a' })]} emptyMessage="Nothing to show." onOpenFolder={vi.fn()} />);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it("opens the item's folder when Show in Chrome is clicked", () => {
+    const onOpenFolder = vi.fn();
+    render(
+      <PathList
+        items={[item({ id: 'a', title: 'Docs', path: ['Bookmarks bar', 'Dev'], folderId: 'dev-folder' })]}
+        emptyMessage="Nothing to show."
+        onOpenFolder={onOpenFolder}
+      />,
+    );
+    screen.getByRole('button', { name: 'Show "Docs" (Bookmarks bar / Dev) in Chrome' }).click();
+    expect(onOpenFolder).toHaveBeenCalledWith('dev-folder');
   });
 });

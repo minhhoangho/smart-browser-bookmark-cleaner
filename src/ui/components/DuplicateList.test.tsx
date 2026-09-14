@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import DuplicateList from './DuplicateList';
 import type { BookmarkRecord } from '@/shared/types';
 
@@ -34,5 +34,38 @@ describe('DuplicateList', () => {
     expect(screen.getByText(/keep/i)).toBeTruthy();
     expect(screen.getByText('Example again')).toBeTruthy();
     expect(screen.getByText('Bookmarks bar / Dev')).toBeTruthy();
+  });
+
+  it('offers Show in Chrome on the keeper and on every copy, each opening its own folder', () => {
+    const onOpenFolder = vi.fn();
+    render(
+      <DuplicateList
+        groups={[
+          {
+            normalizedUrl: 'https://example.com/',
+            keeper: { ...rec('a', 'Example', ['Bookmarks bar']), parentId: 'bar' },
+            duplicates: [{ ...rec('b', 'Example', ['Bookmarks bar', 'Dev']), parentId: 'dev' }],
+          },
+        ]}
+        onOpenFolder={onOpenFolder}
+      />,
+    );
+
+    // Both rows share a title, as real duplicates usually do: the folder path in
+    // the accessible name is what tells the two buttons apart.
+    screen.getByRole('button', { name: 'Show "Example" (Bookmarks bar / Dev) in Chrome' }).click();
+    expect(onOpenFolder).toHaveBeenCalledWith('dev');
+
+    screen.getByRole('button', { name: 'Show "Example" (Bookmarks bar) in Chrome' }).click();
+    expect(onOpenFolder).toHaveBeenLastCalledWith('bar');
+  });
+
+  it('shows no Show in Chrome control without a handler', () => {
+    render(
+      <DuplicateList
+        groups={[{ normalizedUrl: 'https://u.test/', keeper: rec('a', 'A', []), duplicates: [rec('b', 'B', [])] }]}
+      />,
+    );
+    expect(screen.queryByRole('button')).toBeNull();
   });
 });
