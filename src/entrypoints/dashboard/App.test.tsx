@@ -4,6 +4,10 @@ import type { AuditReport } from '@/core/bookmarks/audit';
 
 const runAudit = vi.fn<() => Promise<AuditReport>>();
 vi.mock('@/services/audit', () => ({ runAudit: () => runAudit() }));
+const openBookmarkManager = vi.fn<(folderId: string) => Promise<void>>();
+vi.mock('@/adapters/bookmark-manager', () => ({
+  openBookmarkManager: (folderId: string) => openBookmarkManager(folderId),
+}));
 
 const { default: App } = await import('./App');
 
@@ -26,6 +30,7 @@ function summaryCardValue(label: string): string | null {
 describe('dashboard App', () => {
   afterEach(() => {
     runAudit.mockReset();
+    openBookmarkManager.mockReset();
   });
 
   it('shows a loading message before the audit resolves', () => {
@@ -99,5 +104,91 @@ describe('dashboard App', () => {
     expect(emptyFoldersSection?.textContent).not.toContain('Unscannable-only title');
     expect(notCheckableSection?.textContent).toContain('Unscannable-only title');
     expect(notCheckableSection?.textContent).not.toContain('Empty-folder-only title');
+  });
+
+  it("opens an empty folder's parent, so the folder itself is visible in Chrome", async () => {
+    openBookmarkManager.mockResolvedValue(undefined);
+    runAudit.mockResolvedValue({
+      ...emptyReport(),
+      emptyFolders: [
+        { id: 'f1', parentId: 'parent-of-f1', path: ['Bookmarks bar'], title: 'Old links', depth: 2, isProtected: false },
+      ],
+    });
+
+    render(<App />);
+
+    (await screen.findByRole('button', { name: 'Show "Old links" (Bookmarks bar) in Chrome' })).click();
+    expect(openBookmarkManager).toHaveBeenCalledWith('parent-of-f1');
+  });
+
+  it("opens a duplicate copy's own folder", async () => {
+    openBookmarkManager.mockResolvedValue(undefined);
+    runAudit.mockResolvedValue({
+      ...emptyReport(),
+      redundantCount: 1,
+      duplicateGroups: [{
+        normalizedUrl: 'https://example.com/',
+        keeper: {
+          id: 'k', parentId: 'keeper-folder', path: ['Bookmarks bar'], index: 0, title: 'Example',
+          url: 'https://example.com/', normalizedUrl: 'https://example.com/', dateAdded: 1, scannable: true,
+        },
+        duplicates: [{
+          id: 'c', parentId: 'copy-folder', path: ['Bookmarks bar', 'Dev'], index: 0, title: 'Example',
+          url: 'https://www.example.com/', normalizedUrl: 'https://example.com/', dateAdded: 2, scannable: true,
+        }],
+      }],
+    });
+
+    render(<App />);
+
+    (await screen.findByRole('button', { name: 'Show "Example" (Bookmarks bar / Dev) in Chrome' })).click();
+    expect(openBookmarkManager).toHaveBeenCalledWith('copy-folder');
+  });
+
+  it('logs, rather than swallows, a failure to open the bookmark manager', async () => {
+    const failure = new Error('tabs blocked');
+    openBookmarkManager.mockRejectedValue(failure);
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    runAudit.mockResolvedValue({
+      ...emptyReport(),
+      emptyFolders: [{ id: 'f1', parentId: 'p', path: [], title: 'Old links', depth: 2, isProtected: false }],
+    });
+
+    render(<App />);
+    (await screen.findByRole('button', { name: /Show "Old links"/ })).click();
+
+    await vi.waitFor(() =>
+      expect(consoleError).toHaveBeenCalledWith('[sbc] could not open the bookmark manager', failure),
+    );
+  });
+
+  it('re-runs the audit when the user comes back to the tab', async () => {
+    runAudit.mockResolvedValueOnce({ ...emptyReport(), totalBookmarks: 40 });
+    runAudit.mockResolvedValueOnce({ ...emptyReport(), totalBookmarks: 39 });
+
+    render(<App />);
+    expect(await screen.findByText('40')).toBeTruthy();
+
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(await screen.findByText('39')).toBeTruthy();
+    expect(runAudit).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the current report on screen when a refresh fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    runAudit.mockResolvedValueOnce({ ...emptyReport(), totalBookmarks: 40 });
+    runAudit.mockRejectedValueOnce(new Error('refresh failed'));
+
+    render(<App />);
+    expect(await screen.findByText('40')).toBeTruthy();
+
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    await vi.waitFor(() => expect(consoleError).toHaveBeenCalled());
+    expect(screen.getByText('40')).toBeTruthy();
+    expect(screen.queryByText(/could not read your bookmarks/i)).toBeNull();
   });
 });
